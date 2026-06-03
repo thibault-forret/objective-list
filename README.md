@@ -38,8 +38,3 @@ npm run build
 ```
 
 Les fichiers installables seront générés dans le dossier `release/`.
-
-## 📝 Configuration recommandée de l'IDE
-
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (et désactiver Vetur).
-- Activez le **Take Over Mode** de Volar pour de meilleures performances avec TypeScript.

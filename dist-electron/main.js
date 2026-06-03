@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, nativeImage } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
@@ -90,7 +90,7 @@ function updateProject(id, update) {
   const db2 = getDb();
   const existing = db2.prepare("SELECT id, name, created_at FROM projects WHERE id = ?").get(id);
   if (!existing) {
-    throw new Error("Project not found");
+    throw new Error("Projet non trouvé");
   }
   const name = update.name !== void 0 ? update.name.trim() : existing.name;
   db2.prepare("UPDATE projects SET name = ? WHERE id = ?").run(name, id);
@@ -143,7 +143,7 @@ function updateObjective(id, update) {
   const db2 = getDb();
   const existing = db2.prepare("SELECT id, project_id, title, done, created_at, updated_at FROM objectives WHERE id = ?").get(id);
   if (!existing) {
-    throw new Error("Objective not found");
+    throw new Error("Objectif non trouvé");
   }
   const title = update.title !== void 0 ? update.title.trim() : existing.title;
   const done = update.done !== void 0 ? update.done ? 1 : 0 : existing.done;
@@ -252,10 +252,10 @@ function listAllObjectives() {
 }
 function assertValidPayload(payload) {
   if (!payload || payload.version !== exportVersion) {
-    throw new Error("Unsupported import payload version");
+    throw new Error("Version du fichier d'import non supportée");
   }
   if (!Array.isArray(payload.projects) || !Array.isArray(payload.objectives)) {
-    throw new Error("Invalid import payload");
+    throw new Error("Fichier d'import invalide");
   }
 }
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
@@ -265,9 +265,13 @@ const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let win;
 function createWindow() {
+  const iconPath = path.join(process.env.VITE_PUBLIC, "app-icon.png");
+  if (process.platform === "darwin") {
+    app.dock.setIcon(nativeImage.createFromPath(iconPath));
+  }
   win = new BrowserWindow({
     title: "Objective List",
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname$1, "preload.mjs"),
       contextIsolation: true,
@@ -329,7 +333,7 @@ ipcMain.handle("objectives:delete", (_event, id, projectId) => {
 });
 ipcMain.handle("data:export", async () => {
   const result = await dialog.showSaveDialog({
-    title: "Export objectives",
+    title: "Exporter les objectifs",
     defaultPath: "objective-list.json",
     filters: [{ name: "JSON", extensions: ["json"] }]
   });
@@ -342,7 +346,7 @@ ipcMain.handle("data:export", async () => {
 });
 ipcMain.handle("data:import", async (_event, mode) => {
   const result = await dialog.showOpenDialog({
-    title: "Import objectives",
+    title: "Importer des objectifs",
     properties: ["openFile"],
     filters: [{ name: "JSON", extensions: ["json"] }]
   });
@@ -358,7 +362,7 @@ ipcMain.handle("data:import", async (_event, mode) => {
   } catch (error) {
     return {
       canceled: false,
-      error: error instanceof Error ? error.message : "Import failed"
+      error: error instanceof Error ? error.message : "Échec de l'importation"
     };
   }
 });

@@ -248,8 +248,11 @@ onMounted(async () => {
       return
     }
 
-    if (payload.type === 'objectives' && payload.projectId === selectedProjectId.value) {
-      refreshObjectives(payload.projectId)
+    if (payload.type === 'objectives') {
+      refreshProjects() // Refresh project counts in sidebar
+      if (payload.projectId === selectedProjectId.value) {
+        refreshObjectives(payload.projectId)
+      }
     }
   })
 })
